@@ -213,6 +213,7 @@ $ chrispile uninstall lungct
 
 ## Planned Features
 
-- `chrispile install` from https://chrisstore.co and pulls for you
-- `chrispile list` also shows container image tags
-- `chrispile uninstall --rm` also runs `docker rmi`
+- [ ] test cgroup v2 support
+- [ ] `chrispile install` from https://chrisstore.co and pulls for you
+- [ ] `chrispile list` also shows container image tags
+- [ ] `chrispile uninstall --rm` also runs `docker rmi`
