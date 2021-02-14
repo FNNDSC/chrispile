@@ -213,6 +213,7 @@ $ chrispile uninstall lungct
 
 ## Planned Features
 
+- _actually_ get it working with Podman (and cgroup v2, see also rootless Docker)
 - `chrispile install` from https://chrisstore.co and pulls for you
 - `chrispile list` also shows container image tags
 - `chrispile uninstall --rm` also runs `docker rmi`

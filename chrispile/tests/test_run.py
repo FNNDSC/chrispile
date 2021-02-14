@@ -7,6 +7,7 @@ from os import path
 import subprocess as sp
 
 from chrispile.run import ChrispileRunner
+from chrispile.config import ChrispileConfig
 
 from .dockercli import DockerCli
 
@@ -20,7 +21,8 @@ class TestRun(unittest.TestCase):
         for i, fn in enumerate(example_files):
             with open(path.join(cls.inputdir, fn), 'w') as f:
                 f.write(str(i))
-        DockerCli().pull_if_needed('fnndsc/pl-simpledsapp:2.0.0')
+        cls.config = ChrispileConfig({'engine': 'docker'})
+        DockerCli('docker').pull_if_needed('fnndsc/pl-simpledsapp:2.0.0')
 
     @classmethod
     def tearDownClass(cls):
@@ -32,6 +34,7 @@ class TestRun(unittest.TestCase):
         self.subparsers = self.parser.add_subparsers()
         run_parser = self.subparsers.add_parser('run')
         self.runner = ChrispileRunner(run_parser)
+        self.runner.config = self.config
 
     def tearDown(self):
         os.chdir(self.current_folder)
