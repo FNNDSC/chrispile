@@ -6,7 +6,7 @@ with open(path.join(path.dirname(path.abspath(__file__)), 'README.md')) as f:
 
 setup(
     name='chrispile',
-    version='1.0.0',
+    version='1.0.0-1',
     packages=['chrispile'],
     url='https://github.com/FNNDSC/chrispile',
     license='MIT',
@@ -21,5 +21,15 @@ setup(
         'console_scripts': [
             'chrispile = chrispile.__main__:main'
             ]
-        }
+        },
+    classifiers=[
+        'Programming Language :: Python :: 3 :: Only',
+        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
+        'License :: OSI Approved :: MIT License',
+        'Operating System :: POSIX :: Linux',
+        'Topic :: Scientific/Engineering :: Medical Science Apps.',
+        'Topic :: Software Development',
+        'Topic :: System :: Software Distribution'
+    ]
 )
