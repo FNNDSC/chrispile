@@ -62,15 +62,9 @@ class TestRun(unittest.TestCase):
             exe = sp.run(
                 ['sh', '-sx', '-'] + cmd,
                 input=code, env=env, text=True, check=True,
-                capture_output=True
+                capture_output=False
             )
         except sp.CalledProcessError as e:
-            print(e.returncode)
-            print(e.output)
-            print(e.cmd)
-            print(cmd)
-            print(code)
-            print(env)
             raise Exception('why tho')
 
         return exe.stdout
