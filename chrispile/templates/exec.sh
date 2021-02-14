@@ -52,9 +52,9 @@ function run () {
 {#- user detection should be a candidate for deprecation #}
 {# when eventually rootless containers become mainstream #}
 # detect cgroup v2 rootless support
-if [ "{{ engine }}" = "podman" ] && [ "$(podman info --format '.host.rootless')" = "true" ]; then
+if [ "{{ engine }}" = "podman" ] && [ "$(podman info --format '{{ "{{ .host.rootless }}" }}')" = "true" ]; then
   user_setting=
-elif [ "{{ engine }}" = "docker" ] && [ "$(docker info --format '.CgroupVersion')" = "2" ]; then
+elif [ "{{ engine }}" = "docker" ] && [ "$(docker info --format '{{ "{{ .CgroupVersion }}" }}')" = "2" ]; then
   user_setting=
 else
   user_setting="--user $(id -u):$(id -g)"
@@ -63,9 +63,9 @@ fi
 {% set executor = 'exec' %}
 # detect cgroup v2 rootless support
 {%- if engine == 'podman' %}
-if [ "$(podman info --format '.host.rootless')" = "true" ]; then
+if [ "$(podman info --format '{{ "{{ .host.rootless }}" }}')" = "true" ]; then
 {%- elif engine == 'docker' %}
-if [ "$(docker info --format '.CgroupVersion')" = "2" ]; then
+if [ "$(docker info --format '{{ "{{ .CgroupVersion }}" }}')" = "2" ]; then
 {%- else %}
 if false; then  # unknown engine, cannot detect rootless containers support
 {%- endif %}
