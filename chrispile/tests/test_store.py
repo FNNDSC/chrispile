@@ -10,6 +10,10 @@ from .dockercli import DockerCli
 
 
 class TestStore(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        DockerCli().pull_if_needed('fnndsc/pl-simpledsapp:2.0.0')
+
     def setUp(self):
         self.tempdir = TemporaryDirectory()
         self.dir = self.tempdir.name
@@ -23,9 +27,6 @@ class TestStore(unittest.TestCase):
         uninstall_parser = self.subparsers.add_parser('uninstall')
         remover = StoreRemover(uninstall_parser)
         remover.config = self.config
-
-        self.example_image = 'fnndsc/pl-simpledsapp:2.0.0'
-        DockerCli().pull_if_needed(self.example_image)
 
     def tearDown(self):
         self.tempdir.cleanup()
@@ -42,7 +43,7 @@ class TestStore(unittest.TestCase):
             with NamedTemporaryFile(dir=self.dir, delete=True) as tmp:
                 pass
             target = tmp.name
-        self.simulate('install', '-o', target, self.example_image)
+        self.simulate('install', '-o', target, 'fnndsc/pl-simpledsapp:2.0.0')
         return target
 
     def test_can_recognize_product(self):

@@ -9,18 +9,20 @@ from .dockercli import DockerCli
 
 
 class TestWithoutDocker(unittest.TestCase):
-    def setUp(self):
+    @classmethod
+    def setUpClass(cls):
         # disable docker
-        self.tempdir = TemporaryDirectory()
-        overdir = self.tempdir.name
+        cls.tempdir = TemporaryDirectory()
+        overdir = cls.tempdir.name
         os.environ['PATH'] = ':'.join([overdir, os.environ['PATH']])
         os.symlink('/bin/false', os.path.join(overdir, 'docker'))
 
-        self.config = ChrispileConfig({'engine': 'podman'})
+        cls.config = ChrispileConfig({'engine': 'podman'})
         DockerCli('podman').pull_if_needed('fnndsc/pl-simpledsapp:2.0.0')
 
-    def tearDown(self):
-        self.tempdir.cleanup()
+    @classmethod
+    def tearDownClass(cls):
+        cls.tempdir.cleanup()
 
     def test_only_podman(self):
         self.compiler = Chrispiler(self.config)

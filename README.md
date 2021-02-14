@@ -134,7 +134,7 @@ docker run --rm --user 1000:1003              \
 ##### Real Run
 
 ```
-$ chrispile run -- fnndsc/pl-simpledsapp:2.0.0 --dummyFloat 3.2 input output
+$ chrispile run -- fnndsc/pl-simpledsapp:2.0.0 --dummyFloat 3.5 input output
 
      _                 _          _                       
     (_)               | |        | |                      

@@ -35,7 +35,11 @@ class ChrispileRunner(CommandProvider):
         compiler.test_the_waters(options.dock_image)
         code = compiler.compile_plugin(options.dock_image)
 
+        self.exec(options.args, code, env)
+
+    @staticmethod
+    def exec(args, code, env):
         try:
-            sp.run(['sh', '-s', '-'] + options.args, input=code, env=env, text=True, check=True)
+            sp.run(['sh', '-s', '-'] + args, input=code, env=env, text=True, check=True)
         except sp.CalledProcessError as e:
             sys.exit(e.returncode)

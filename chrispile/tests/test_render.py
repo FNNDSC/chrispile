@@ -7,8 +7,9 @@ from .dockercli import DockerCli
 
 
 class TestRender(unittest.TestCase):
-    def setUp(self) -> None:
-        self.compiler = Chrispiler(ChrispileConfig())
+    @classmethod
+    def setUpClass(cls):
+        cls.compiler = Chrispiler(ChrispileConfig())
         DockerCli().pull_if_needed('fnndsc/pl-simpledsapp:2.0.0')
 
     def test_image_not_pulled(self):
