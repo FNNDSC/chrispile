@@ -28,6 +28,8 @@ but it is tedious and confusing to work with.
 
 `chrispile` aims to hide this complexity from users.
 
+WARNING: it is not a good idea to use `chrispile` unless you understand why it is helpful. You gotta learn the basics: [what is docker?](https://github.com/FNNDSC/cookiecutter-chrisapp/wiki/Introduction-to-Docker)
+
 ### Example
 
 ```bash
