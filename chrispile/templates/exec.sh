@@ -130,7 +130,7 @@ done
 if [ -f /etc/localtime ]; then
   timezone="-v /etc/localtime:/etc/localtime:ro{{ selinux_mount_flag }}"
 fi
-
+podman info
 {{ executor }} {{ engine }} run  \
     --rm $user_setting \
     {{ gpus }}  \
