@@ -56,9 +56,9 @@ class TestRun(unittest.TestCase):
         self.runner.exec.assert_called_once()
         cmd, code, env = self.runner.exec.call_args.args
         exe = sp.run(
-            ['bash', '-sx', '-'] + cmd,
+            ['sh', '-s', '-'] + cmd,
             input=code, env=env, text=True, check=True,
-            capture_output=False
+            capture_output=True
         )
         return exe.stdout
 
@@ -70,10 +70,14 @@ class TestRun(unittest.TestCase):
                 self.inputdir, outputdir
             ]
             output = self.simulate_output(*cmd)
-            self.assertTrue(output.startswith('docker run'))
+            self.assertTrue(
+                output.startswith('docker run') or output.startswith('podman run'),
+                'Dry-run output does not start with `docker/podman run`'
+                'output: ' + output
+            )
             self.assertEqual(
                 0, len(os.listdir(outputdir)),
-                'did a dry run but output directory is not empty'
+                'Did a dry-run but output directory is not empty'
             )
 
     def test_run_no_dirs(self):
@@ -92,13 +96,13 @@ class TestRun(unittest.TestCase):
             files = os.listdir(outputdir)
             self.assertGreater(
                 len(files), 0,
-                'output directory empty after running plugin'
+                'Output directory empty after running plugin'
             )
             a_file = path.join(outputdir, files[0])
             stat = os.stat(a_file)
             self.assertEqual(
                 stat.st_uid, os.getuid(),
-                'you do not own the file created by the plugin'
+                'You do not own the file created by the plugin'
             )
             os.unlink(a_file)
 
@@ -136,10 +140,16 @@ class TestRun(unittest.TestCase):
 
                 self.assertIn('these lines do not appear in the original source', output)
                 output_file = path.join(outputdir, 'chrispile_test.txt')
-                self.assertTrue(path.isfile(output_file))
+                self.assertTrue(
+                    path.isfile(output_file),
+                    'Modified source code of pl-simpledsapp did not produce the hard-coded output file.'
+                )
                 with open(output_file, 'r') as f:
                     output_content = f.readlines()
-                self.assertEqual('we are testing chrispile', output_content[0])
+                self.assertEqual(
+                    'we are testing chrispile', output_content[0],
+                    'Unexpected content in output from modified pl-simpledsapp'
+                )
 
 
 if __name__ == '__main__':
