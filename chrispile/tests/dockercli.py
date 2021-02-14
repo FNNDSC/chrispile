@@ -17,4 +17,4 @@ class DockerCli:
         sp.run([self.engine, 'tag', dock_image, new_tag])
 
     def docker_rmi(self, dock_image: str):
-        sp.run([self, 'rmi', dock_image])
+        sp.run([self.engine, 'rmi', dock_image])

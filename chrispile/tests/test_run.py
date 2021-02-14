@@ -7,7 +7,6 @@ from os import path
 import subprocess as sp
 
 from chrispile.run import ChrispileRunner
-from chrispile.config import ChrispileConfig
 
 from .dockercli import DockerCli
 
@@ -33,16 +32,25 @@ class TestRun(unittest.TestCase):
         self.subparsers = self.parser.add_subparsers()
         run_parser = self.subparsers.add_parser('run')
         self.runner = ChrispileRunner(run_parser)
-        self.runner.config = ChrispileConfig({'engine': 'docker'})
 
     def tearDown(self):
         os.chdir(self.current_folder)
 
     def simulate(self, *args):
+        """
+        Run the program as if it were called from CLI.
+        :param args: cli arguments
+        """
         options = self.parser.parse_args(args)
         options.func(options)
 
-    def simulate_output(self, *args):
+    def simulate_output(self, *args) -> str:
+        """
+        Run the program as if it were called from the CLI,
+        and return stdout as a string.
+        :param args: cli arguments
+        :return: output from stdout
+        """
         self.runner.exec = Mock()
         self.simulate(*args)
         self.runner.exec.assert_called_once()
