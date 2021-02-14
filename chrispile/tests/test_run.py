@@ -56,7 +56,7 @@ class TestRun(unittest.TestCase):
         self.runner.exec.assert_called_once()
         cmd, code, env = self.runner.exec.call_args.args
         exe = sp.run(
-            ['sh', '-s', '-'] + cmd,
+            ['bash', '-s', '-'] + cmd,
             input=code, env=env, text=True, check=True,
             capture_output=True
         )
