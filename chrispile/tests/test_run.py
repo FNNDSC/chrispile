@@ -60,7 +60,7 @@ class TestRun(unittest.TestCase):
         cmd, code, env = self.runner.exec.call_args.args
         try:
             exe = sp.run(
-                ['sh', '-s', '-'] + cmd,
+                ['sh', '-sx', '-'] + cmd,
                 input=code, env=env, text=True, check=True,
                 capture_output=True
             )
