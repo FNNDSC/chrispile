@@ -12,7 +12,7 @@ setup(
     license='MIT',
     author='Jennings Zhang',
     author_email='Jennings.Zhang@childrens.harvard.edu',
-    description='Generate wrapper scripts around docker or podman run to easily run ChRIS plugins',
+    description='Syntactic sugar for running ChRIS apps locally',
     long_description=readme,
     long_description_content_type='text/markdown',
     python_requires='>=3.8',

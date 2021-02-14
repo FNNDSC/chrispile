@@ -1,7 +1,10 @@
 # ![Logo](docs/chrispile_logo.png) ChRISPile
 
-Syntactical sugar for running ChRIS plugins locally.
+[![PyPI](https://img.shields.io/pypi/v/chrispile)](https://pypi.org/project/chrispile/)
+[![License - MIT](https://img.shields.io/pypi/l/chrispile)](https://github.com/FNNDSC/chrispile/blob/master/LICENSE)
+[![test](https://github.com/FNNDSC/chrispile/workflows/test/badge.svg)](https://github.com/FNNDSC/chrispile/actions)
 
+Syntactical sugar for running ChRIS plugins locally.
 
 ## Abstract
 

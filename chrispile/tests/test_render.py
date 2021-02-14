@@ -3,7 +3,7 @@ import unittest
 from chrispile.config import ChrispileConfig
 from chrispile.render import Chrispiler
 
-from .sample import pull_if_needed
+from .image_sample import pull_if_needed
 
 
 class TestRender(unittest.TestCase):

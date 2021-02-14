@@ -6,7 +6,7 @@ from os import path
 from chrispile.store import is_product, ChrispileInstaller, StoreRemover
 from chrispile.config import ChrispileConfig
 
-from .sample import pull_if_needed
+from .image_sample import pull_if_needed
 
 
 class TestStore(unittest.TestCase):
