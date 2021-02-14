@@ -28,11 +28,15 @@ class TestRun(unittest.TestCase):
         cls.td.cleanup()
 
     def setUp(self):
+        self.current_folder = os.getcwd()
         self.parser = argparse.ArgumentParser()
         self.subparsers = self.parser.add_subparsers()
         run_parser = self.subparsers.add_parser('run')
         self.runner = ChrispileRunner(run_parser)
         self.runner.config = ChrispileConfig({'engine': 'docker'})
+
+    def tearDown(self):
+        os.chdir(self.current_folder)
 
     def simulate(self, *args):
         options = self.parser.parse_args(args)
@@ -40,7 +44,7 @@ class TestRun(unittest.TestCase):
 
     def simulate_output(self, *args):
         self.runner.exec = Mock()
-        self.simulate('run', '--dry-run', '--', *args)
+        self.simulate(*args)
         self.runner.exec.assert_called_once()
         cmd, code, env = self.runner.exec.call_args.args
         exe = sp.run(
@@ -51,9 +55,12 @@ class TestRun(unittest.TestCase):
         return exe.stdout
 
     def test_dry_run(self):
-        cmd = ['fnndsc/pl-simpledsapp:2.0.0', '--dummyFloat', '3.5']
         with TemporaryDirectory() as outputdir:
-            cmd += [self.inputdir, outputdir]
+            cmd = [
+                'run', '--dry-run', '--',
+                'fnndsc/pl-simpledsapp:2.0.0', '--dummyFloat', '3.5',
+                self.inputdir, outputdir
+            ]
             output = self.simulate_output(*cmd)
             self.assertTrue(output.startswith('docker run'))
             self.assertEqual(
@@ -62,9 +69,12 @@ class TestRun(unittest.TestCase):
             )
 
     def test_run_no_dirs(self):
-        cmd = ['fnndsc/pl-simpledsapp:2.0.0', '--meta']
+        cmd = [
+            'run', '--',
+            'fnndsc/pl-simpledsapp:2.0.0', '--meta'
+        ]
         output = self.simulate_output(*cmd)
-        self.assertIn('simpledsapp', output)
+        self.assertIn('TITLE: Simple chris ds app', output)
 
     def test_runs_container(self):
         cmd = ['fnndsc/pl-simpledsapp:2.0.0', '--dummyFloat', '3.5']
@@ -92,6 +102,36 @@ class TestRun(unittest.TestCase):
                 {}
             )
         self.assertEqual(exit_condition.exception.code, 37)
+
+    def test_hot_reload(self):
+        with TemporaryDirectory() as workspace:
+            os.chdir(workspace)
+            sp.run(['git', 'clone', 'https://github.com/FNNDSC/pl-simpledsapp.git'])
+            os.chdir('pl-simpledsapp')
+            sp.run(['git', 'checkout', '2.0.0'], stderr=sp.DEVNULL)
+            src_folder = path.join(os.getcwd(), 'simpledsapp')
+            with open(path.join(src_folder, 'simpledsapp.py'), 'at') as src:
+                src.write('\n\n')
+                src.write('    def run(self, options):\n')
+                src.write('        print("these lines do not appear in the original source")\n')
+                src.write('        with open(os.path.join(options.outputdir, "chrispile_test.txt"), "w") as f:\n')
+                src.write('            f.write("we are testing chrispile")\n')
+
+            with TemporaryDirectory() as outputdir:
+                cmd = [
+                    'run', '--reload-from', src_folder, '--',
+                    'fnndsc/pl-simpledsapp:2.0.0', '--dummyFloat', '3.5',
+                    self.inputdir, outputdir
+                ]
+
+                output = self.simulate_output(*cmd)
+
+                self.assertIn('these lines do not appear in the original source', output)
+                output_file = path.join(outputdir, 'chrispile_test.txt')
+                self.assertTrue(path.isfile(output_file))
+                with open(output_file, 'r') as f:
+                    output_content = f.readlines()
+                self.assertEqual('we are testing chrispile', output_content[0])
 
 
 if __name__ == '__main__':
