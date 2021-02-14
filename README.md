@@ -1,4 +1,4 @@
-# ![Logo](docs/chrispile_logo.png) ChRISPile
+# ![Logo](https://raw.githubusercontent.com/FNNDSC/chrispile/master/docs/chrispile_logo.png) ChRISPile
 
 [![PyPI](https://img.shields.io/pypi/v/chrispile)](https://pypi.org/project/chrispile/)
 [![License - MIT](https://img.shields.io/pypi/l/chrispile)](https://github.com/FNNDSC/chrispile/blob/master/LICENSE)
