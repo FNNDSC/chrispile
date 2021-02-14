@@ -1,6 +1,6 @@
 import unittest
 
-from chrispile.config import ChrispileConfig
+from chrispile.config import get_config, ChrispileConfig
 from chrispile.render import Chrispiler
 
 from .dockercli import DockerCli
@@ -9,7 +9,8 @@ from .dockercli import DockerCli
 class TestRender(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.compiler = Chrispiler(ChrispileConfig())
+        cls.config = get_config()
+        cls.compiler = Chrispiler(cls.config)
         DockerCli().pull_if_needed('fnndsc/pl-simpledsapp:2.0.0')
 
     def test_image_not_pulled(self):
@@ -32,7 +33,7 @@ class TestRender(unittest.TestCase):
         self.assertNotIn('/incoming:ro,z', code)
         self.assertNotIn('/outgoing:rw,z', code)
 
-        selinux_config = ChrispileConfig({'selinux': 'enforcing'})
+        selinux_config = ChrispileConfig({'selinux': 'enforcing'}, self.config)
         compiler = Chrispiler(selinux_config)
         code = compiler.compile_plugin('fnndsc/pl-simpledsapp:2.0.0', linking='static')
         self.assertIn('/incoming:ro,z', code)

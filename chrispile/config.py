@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+from typing import Union
 from os import path, environ, getenv
 from yaml import safe_load
 
@@ -15,11 +18,13 @@ DEFAULT_CONFIG = {
 
 
 class ChrispileConfig:
-    def __init__(self, custom_config: dict = None, default_config: dict = None):
+    def __init__(self, custom_config: dict = None, default_config: Union[ChrispileConfig, dict] = None):
         if custom_config is None:
             custom_config = {}
         if default_config is None:
             default_config = DEFAULT_CONFIG
+        elif default_config.__class__ is ChrispileConfig:
+            default_config = default_config.__dict__
 
         merged_config = dict()
         merged_config.update(default_config)

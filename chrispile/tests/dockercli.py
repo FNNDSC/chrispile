@@ -1,12 +1,13 @@
 import subprocess as sp
 
 from chrispile.api import EngineEndpoint
-from chrispile.config import ChrispileConfig
+from chrispile.config import get_config
 
 
 class DockerCli:
     def __init__(self, engine=None):
-        self.engine = engine if engine else EngineEndpoint(ChrispileConfig()).as_shell()
+        config = get_config()
+        self.engine = engine if engine else EngineEndpoint(config).as_shell()
 
     def pull_if_needed(self, dock_image: str):
         image_id = sp.check_output([self.engine, 'images', '--format', '{{ .ID}}', dock_image])

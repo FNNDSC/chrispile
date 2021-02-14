@@ -213,7 +213,7 @@ $ chrispile uninstall lungct
 
 ## Planned Features
 
-- [ ] Github Actions build matrix to test docker and podman separately
+- [x] Github Actions build matrix to test docker and podman separately
 - [ ] `chrispile install` from https://chrisstore.co and pulls for you
 - [ ] `chrispile list` also shows container image tags
 - [ ] `chrispile uninstall --rm` also runs `docker rmi`

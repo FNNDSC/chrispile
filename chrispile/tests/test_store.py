@@ -4,7 +4,7 @@ import argparse
 from os import path
 
 from chrispile.store import is_product, ChrispileInstaller, StoreRemover
-from chrispile.config import ChrispileConfig
+from chrispile.config import get_config, ChrispileConfig
 
 from .dockercli import DockerCli
 
@@ -17,7 +17,8 @@ class TestStore(unittest.TestCase):
     def setUp(self):
         self.tempdir = TemporaryDirectory()
         self.dir = self.tempdir.name
-        self.config = ChrispileConfig({'bin_folder': self.dir})
+        config = get_config()
+        self.config = ChrispileConfig({'bin_folder': self.dir}, config)
 
         self.parser = argparse.ArgumentParser()
         self.subparsers = self.parser.add_subparsers()
