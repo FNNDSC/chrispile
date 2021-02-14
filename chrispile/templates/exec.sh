@@ -52,27 +52,20 @@ function run () {
 {#- user detection should be a candidate for deprecation #}
 {# when eventually rootless containers become mainstream #}
 # detect cgroup v2 rootless support
-if [ "{{ engine }}" = "podman" ] && [ "$(podman info --format '{{ "{{ .host.rootless }}" }}')" = "true" ]; then
-  user_setting=
-elif [ "{{ engine }}" = "docker" ] && [ "$(docker info --format '{{ "{{ .CgroupVersion }}" }}')" = "2" ]; then
-  user_setting=
-else
-  user_setting="--user $(id -u):$(id -g)"
+# using podman? what a cool kid, we're assuming id mapping is configured
+if [ "{{ engine }}" = "docker" ]; then
+  if [ "$(docker info --format '{{ "{{ .CgroupVersion }}" }}')" != "2" ]; then
+    user_setting="--user $(id -u):$(id -g)"
+  fi
 fi
 {% else -%}
 {% set executor = 'exec' %}
-# detect cgroup v2 rootless support
-{%- if engine == 'podman' %}
-if [ "$(podman info --format '{{ "{{ .host.rootless }}" }}')" = "true" ]; then
-{%- elif engine == 'docker' %}
-if [ "$(docker info --format '{{ "{{ .CgroupVersion }}" }}')" = "2" ]; then
-{%- else %}
-if false; then  # unknown engine, cannot detect rootless containers support
-{%- endif %}
-  user_setting=
-else
+{%- if engine == 'docker' %}
+# set container user if cgroup v2 is unsupported
+if [ "$(docker info --format '{{ "{{ .CgroupVersion }}" }}')" != "2" ]; then
   user_setting="--user $(id -u):$(id -g)"
 fi
+{%- endif %}
 {% endif %}
 
 {%- if meta['min_gpu_limit'] == 0 %}
@@ -130,7 +123,7 @@ done
 if [ -f /etc/localtime ]; then
   timezone="-v /etc/localtime:/etc/localtime:ro{{ selinux_mount_flag }}"
 fi
-podman info
+
 {{ executor }} {{ engine }} run  \
     --rm $user_setting \
     {{ gpus }}  \
