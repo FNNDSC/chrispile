@@ -3,13 +3,13 @@ import unittest
 from chrispile.config import ChrispileConfig
 from chrispile.render import Chrispiler
 
-from .image_sample import pull_if_needed
+from .dockercli import DockerCli
 
 
 class TestRender(unittest.TestCase):
     def setUp(self) -> None:
         self.compiler = Chrispiler(ChrispileConfig())
-        pull_if_needed('fnndsc/pl-simpledsapp:2.0.0')
+        DockerCli().pull_if_needed('fnndsc/pl-simpledsapp:2.0.0')
 
     def test_image_not_pulled(self):
         with self.assertRaises(SystemExit):

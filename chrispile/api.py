@@ -102,7 +102,7 @@ class GpuEndpoint(Endpoint):
             logger.warning('GPU detection for podman not implemented')
             return None
         if engine == 'docker':
-            output = check_output(['docker', 'info', '--format', '{{ (json .Runtimes) }}'], encoding='utf-8')
+            output = check_output([engine, 'info', '--format', '{{ (json .Runtimes) }}'], encoding='utf-8')
             runtimes = json.loads(output)
             if 'nvidia' in runtimes:
                 return 'nvidia-container-runtime'

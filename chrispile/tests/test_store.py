@@ -6,7 +6,7 @@ from os import path
 from chrispile.store import is_product, ChrispileInstaller, StoreRemover
 from chrispile.config import ChrispileConfig
 
-from .image_sample import pull_if_needed
+from .dockercli import DockerCli
 
 
 class TestStore(unittest.TestCase):
@@ -25,7 +25,7 @@ class TestStore(unittest.TestCase):
         remover.config = self.config
 
         self.example_image = 'fnndsc/pl-simpledsapp:2.0.0'
-        pull_if_needed(self.example_image)
+        DockerCli().pull_if_needed(self.example_image)
 
     def tearDown(self):
         self.tempdir.cleanup()

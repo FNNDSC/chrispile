@@ -58,7 +58,7 @@ class PythonImageInfo:
             # New behavior in python3.9: importlib.resources.path(package, '') raises IsADirectoryError
             detected_path = check_output(
                 [
-                    'docker', 'run', '--rm', '-w', '/',
+                    self.engine, 'run', '--rm', '-w', '/',
                     '--entrypoint', 'python',
                     dock_image,
                     '-c',
@@ -75,7 +75,7 @@ class PythonImageInfo:
                             f'/site-packages/{meta["selfexec"]}'
         run(
             [
-                'docker', 'run', '--rm', '-w', '/',
+                self.engine, 'run', '--rm', '-w', '/',
                 '--entrypoint', 'sh',
                 dock_image,
                 '-c', 'test -f ' + path.join(detected_path, "__init__.py")
@@ -132,10 +132,10 @@ class Chrispiler:
         :return: code for a shell script
         """
         engine = EngineEndpoint(self.config).as_shell()
-        docker = PythonImageInfo(engine)
+        info = PythonImageInfo(engine)
 
-        meta = docker.get_plugin_meta(dock_image)
-        resource_dir = docker.find_resource_dir(dock_image, meta) if linking == 'dynamic' else ''
+        meta = info.get_plugin_meta(dock_image)
+        resource_dir = info.find_resource_dir(dock_image, meta) if linking == 'dynamic' else ''
 
         return self.template.render(
             linking=linking,
