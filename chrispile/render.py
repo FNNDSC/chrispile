@@ -50,7 +50,7 @@ class PythonImageInfo:
                 dock_image,
                 '--version'
             ],
-            encoding='utf-8'
+            text=True
         )
         python_version_number = python_version_string.split()[-1]
         if parse_version(python_version_number) >= parse_version('3.7'):

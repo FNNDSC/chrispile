@@ -40,6 +40,6 @@ class ChrispileRunner(CommandProvider):
     @staticmethod
     def exec(args, code, env):
         try:
-            sp.run(['sh', '-s', '-'] + args, input=code, env=env, text=True, check=True)
+            sp.run(['bash', '-s', '-'] + args, input=code, env=env, text=True, check=True)
         except sp.CalledProcessError as e:
             sys.exit(e.returncode)

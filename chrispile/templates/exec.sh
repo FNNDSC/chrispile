@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # {{ selfexec }} {{ meta['type'] }} ChRIS plugin app
 # Chrispile-generated wrapper script
 #
@@ -30,7 +30,7 @@ if [ -n "$CHRISPILE_HOST_SOURCE_DIR" ]; then
     echo "'$source_folder/__init__.py': No such file"
     exit 1
   fi
-  injection+="-w / -v $source_folder:$resource_dir:ro{{ selinux_mount_flag }}"
+  resource_injection="-w / -v $source_folder:$resource_dir:ro{{ selinux_mount_flag }}"
 fi
 {% else %}
 if [ -n "$CHRISPILE_HOST_SOURCE_DIR" ]; then
@@ -48,8 +48,24 @@ function run () {
     exec $@
   fi
 }
+
+{#- user detection should be a candidate for deprecation #}
+{# when eventually rootless containers become mainstream #}
+# detect cgroup v2 rootless support
+# using podman? what a cool kid, we're assuming id mapping is configured
+if [ "{{ engine }}" = "docker" ]; then
+  if [ "$(docker info --format '{{ "{{ .CgroupVersion }}" }}')" != "2" ]; then
+    user_setting="--user $(id -u):$(id -g)"
+  fi
+fi
 {% else -%}
-{% set executor = 'exec' -%}
+{% set executor = 'exec' %}
+{%- if engine == 'docker' %}
+# set container user if cgroup v2 is unsupported
+if [ "$(docker info --format '{{ "{{ .CgroupVersion }}" }}')" != "2" ]; then
+  user_setting="--user $(id -u):$(id -g)"
+fi
+{%- endif %}
 {% endif %}
 
 {%- if meta['min_gpu_limit'] == 0 %}
@@ -109,9 +125,9 @@ if [ -f /etc/localtime ]; then
 fi
 
 {{ executor }} {{ engine }} run  \
-    --rm --user $(id -u):$(id -g)  \
+    --rm $user_setting \
     {{ gpus }}  \
-    $timezone ${shared_volumes[@]} $injection  \
+    $timezone ${shared_volumes[@]} $resource_injection  \
     {{ dock_image }} {{ selfexec }}  \
     ${cli_args[@]} $@
 
