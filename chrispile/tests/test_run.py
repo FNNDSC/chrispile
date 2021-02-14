@@ -58,11 +58,21 @@ class TestRun(unittest.TestCase):
         self.simulate(*args)
         self.runner.exec.assert_called_once()
         cmd, code, env = self.runner.exec.call_args.args
-        exe = sp.run(
-            ['sh', '-s', '-'] + cmd,
-            input=code, env=env, text=True, check=True,
-            capture_output=True
-        )
+        try:
+            exe = sp.run(
+                ['sh', '-s', '-'] + cmd,
+                input=code, env=env, text=True, check=True,
+                capture_output=True
+            )
+        except sp.CalledProcessError as e:
+            print(e.returncode)
+            print(e.output)
+            print(e.cmd)
+            print(cmd)
+            print(code)
+            print(env)
+            raise Exception('why tho')
+
         return exe.stdout
 
     def test_dry_run(self):
