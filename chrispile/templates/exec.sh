@@ -48,8 +48,31 @@ function run () {
     exec $@
   fi
 }
+
+{#- user detection should be a candidate for deprecation #}
+{# when eventually rootless containers become mainstream #}
+# detect cgroup v2 rootless support
+if [ "{{ engine }}" = "podman" ] && [ "$(podman info --format '.host.rootless')" = "true" ]; then
+  user_setting=
+elif [ "{{ engine }}" = "docker" ] && [ "$(docker info --format '.CgroupVersion')" = "2" ]; then
+  user_setting=
+else
+  user_setting="--user $(id -u):$(id -g)"
+fi
 {% else -%}
-{% set executor = 'exec' -%}
+{% set executor = 'exec' %}
+# detect cgroup v2 rootless support
+{%- if engine == 'podman' %}
+if [ "$(podman info --format '.host.rootless')" = "true" ]; then
+{%- elif engine == 'docker' %}
+if [ "$(docker info --format '.CgroupVersion')" = "2" ]; then
+{%- else %}
+if false; then  # unknown engine, cannot detect rootless containers support
+{%- endif %}
+  user_setting=
+else
+  user_setting="--user $(id -u):$(id -g)"
+fi
 {% endif %}
 
 {%- if meta['min_gpu_limit'] == 0 %}
@@ -109,7 +132,7 @@ if [ -f /etc/localtime ]; then
 fi
 
 {{ executor }} {{ engine }} run  \
-    --rm --user $(id -u):$(id -g)  \
+    --rm $user_setting \
     {{ gpus }}  \
     $timezone ${shared_volumes[@]} $resource_injection  \
     {{ dock_image }} {{ selfexec }}  \
