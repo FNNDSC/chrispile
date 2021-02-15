@@ -25,7 +25,7 @@ jobs:
       - run: python -m unittest
   test-engine:
     name: Test across container engines
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     strategy:
       matrix:
         container-engine: [ 'docker', 'podman' ]
@@ -34,6 +34,7 @@ jobs:
       - run: |
           pip install -r requirements.txt
           pip install .
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
       - name: test
         env:
           ENGINE_TO_TEST: ${{ matrix.container-engine }}
