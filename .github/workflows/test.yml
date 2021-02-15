@@ -19,7 +19,8 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
-      - run: |
+      - name: Install
+        run: |
           pip install -r requirements.txt
           pip install .
       - run: python -m unittest
@@ -31,11 +32,12 @@ jobs:
         container-engine: [ 'docker', 'podman' ]
     steps:
       - uses: actions/checkout@v2
-      - run: |
+      - name: Install
+        run: |
           pip install -r requirements.txt
           pip install .
           echo "$HOME/.local/bin" >> $GITHUB_PATH
-      - name: test
+      - name: Test
         env:
           ENGINE_TO_TEST: ${{ matrix.container-engine }}
         run: testenv/with_engine_mask.sh python -m unittest
