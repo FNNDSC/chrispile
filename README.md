@@ -25,6 +25,7 @@ but it is tedious and confusing to work with.
 - stopped containers occupy disk space
 - GPU is invisible
 - user needs to specify image name and command
+- folders containing data need to be typed out
 
 `chrispile` aims to hide this complexity from users.
 
@@ -53,7 +54,7 @@ docker run
     # set the timezone in case your plugin logs timestamps
     -v /etc/localtime:/etc/localtime:ro
     # resolve input and output paths
-    # SELinux label flag is appended to volume options if necessary
+    # SELinux label flag ':z' is appended to volume options if necessary
     -v /home/jenni/data:/incoming:ro -v /home/jenni/output:rw
     # container image name and command
     fnndsc/pl-fetal-brain-mask:1.0.0 fetal_brain_mask
