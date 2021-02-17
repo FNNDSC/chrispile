@@ -1,6 +1,6 @@
 #!/bin/bash
 # Run a command with container engines masked
-# usage: ENGINE_TO_TEST=podman testenv/with_engine_mask.sh python -m unittest
+# usage: ENGINE_TO_TEST=podman test/with_engine_mask.sh python -m unittest
 
 ENGINES=(docker podman)
 
@@ -14,12 +14,8 @@ for engine in "${ENGINES[@]}"; do
   fi
 done
 
-source_dir=$(dirname "$(readlink -f "$0")")
-CHRISPILE_CONFIG_FILE=$source_dir/$ENGINE_TO_TEST.yml
-
-if [ -f "$CHRISPILE_CONFIG_FILE" ]; then
-  export CHRISPILE_CONFIG_FILE
-fi
+export CHRISPILE_CONFIG_FILE=$mask_dir/chrispile_config.yml
+echo "engine: $ENGINE_TO_TEST" > $CHRISPILE_CONFIG_FILE
 
 $@
 result=$?
