@@ -216,6 +216,8 @@ $ chrispile uninstall lungct
 ## Planned Features
 
 - [x] Github Actions build matrix to test docker and podman separately
+- [ ] `chrispile create` as an alias for [cookiecutter-chrisapp](https://github.com/FNNDSC/cookiecutter-chrisapp)
+- [ ] `chrispile run --clobber` deletes the `/outgoing` directory before start
 - [ ] `chrispile install` from https://chrisstore.co and pulls for you
 - [ ] `chrispile list` also shows container image tags
 - [ ] `chrispile uninstall --rm` also runs `docker rmi`
