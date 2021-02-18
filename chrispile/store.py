@@ -1,6 +1,7 @@
 import sys
 import stat
 import os
+import pwd
 from os import path
 from argparse import Namespace, ArgumentParser
 import logging
@@ -55,15 +56,7 @@ class ChrispileInstaller(CommandProvider):
             target = options.output
             output_name = target
         else:
-            bin_folder = path.expanduser(self.config.bin_folder)
-            os.makedirs(bin_folder, exist_ok=True)
-
-            path_list = os.environ['PATH'].split(':')
-            if bin_folder not in path_list and self.config.bin_folder not in path_list:
-                logger.warning('%s not in $PATH', bin_folder)
-                logger.warning('You may want to add the line below to ~/.bashrc:')
-                logger.warning('\nexport PATH=%s:$PATH', bin_folder)
-
+            bin_folder = self.get_installation_dir()
             target = path.join(bin_folder, name)
             output_name = name
 
@@ -77,6 +70,26 @@ class ChrispileInstaller(CommandProvider):
 
         os.chmod(target, stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP | stat.S_IROTH | stat.S_IXOTH)
         print(output_name)
+
+    def get_installation_dir(self) -> str:
+        """
+        Get from config the bin folder where to install.
+        Show a warning and how to fix if folder is not in $PATH
+        :return: bin folder
+        """
+        bin_folder = path.expanduser(self.config.bin_folder)
+        os.makedirs(bin_folder, exist_ok=True)
+
+        path_list = os.environ['PATH'].split(':')
+        if bin_folder not in path_list:
+            logger.warning('%s not in $PATH', bin_folder)
+
+            shell = path.basename(pwd.getpwuid(os.geteuid()).pw_shell)
+            if shell in ['bash', 'zsh']:
+                logger.warning('To fix, run this command yourself: ')
+                logger.warning("\n\techo 'export PATH=%s:$PATH' >> ~/.%src\n", bin_folder, shell)
+
+        return bin_folder
 
 
 def is_product(filename: str) -> bool:
