@@ -19,7 +19,7 @@ jobs:
           touch in/a
 
       - name: wo script
-        run: podman run --rm fnndsc/pl-simpledsapp:2.0.0 ls /bin
+        run: podman run --rm -v /etc/localtime:/etc/localtime:ro -v /home/runner/work/chrispile/chrispile/in:/incoming:ro fnndsc/pl-simpledsapp:2.0.0 ls /incoming
       
       # - name: Real run
       #   env:
