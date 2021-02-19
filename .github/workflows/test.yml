@@ -19,14 +19,7 @@ jobs:
           touch in/a
 
       - name: wo script
-        run: |
-          python << EOF
-          from subprocess import run
-          from os import environ
-          e = {}
-          e.update(environ)
-          cmd = 'exec podman run --rm -v /etc/localtime:/etc/localtime:ro -v /home/runner/work/chrispile/chrispile/in:/incoming:ro -v /home/runner/work/chrispile/chrispile/out:/outgoing:rw fnndsc/pl-simpledsapp:2.0.0 ls /incoming'
-          run(['bash', '-xs', '-'], input=cmd, env=e, text=True, check=True)
+        run: podman run --rm -v /etc/localtime:/etc/localtime:ro -v /home/runner/work/chrispile/chrispile/in:/incoming:ro -v /home/runner/work/chrispile/chrispile/out:/outgoing:rw fnndsc/pl-simpledsapp:2.0.0 ls /incoming
       
       # - name: Real run
       #   env:
