@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        image: [ 'alpine', 'debian' ]
+        image: [ 'alpine', 'python:3.9.1-slim-buster' ]
         engine: [ 'podman', 'docker' ]
     steps:
       - name: Pull
