@@ -28,11 +28,11 @@ class ChrispileInstaller(CommandProvider):
         linking = parser.add_mutually_exclusive_group()
         linking.add_argument('-s', '--static',
                              action='store_true',
-                             help="resolve the script's dependency on $(prog)s itself")
+                             help="resolve the script's dependency on %(prog)s itself")
         linking.add_argument('-d', '--dynamic',
                              action='store_true',
                              help='produce a script which resolves system information '
-                                  'at runtime via $(prog) api')
+                                  'at runtime via %(prog) api')
         parser.add_argument('dock_image',
                             help='container image of the ChRIS plugin')
 
