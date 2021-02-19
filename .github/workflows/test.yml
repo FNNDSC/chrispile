@@ -10,17 +10,11 @@ jobs:
   test-engine:
     name: Test across container engines
     runs-on: ubuntu-20.04
-    strategy:
-      matrix:
-        container-engine: [ 'podman' ]
     steps:
       # - uses: actions/checkout@v2
       - name: Install
         run: |
-          # pip install -r requirements.txt
-          # pip install .
-          # echo "$HOME/.local/bin" >> $GITHUB_PATH
-          ${{ matrix.container-engine }} pull fnndsc/pl-simpledsapp:2.0.0
+          podman pull fnndsc/pl-simpledsapp:2.0.0
           mkdir in out
           touch in/a
 
@@ -31,7 +25,7 @@ jobs:
           from os import environ
           e = {}
           e.update(environ)
-          cmd = 'exec podman run --rm -v /etc/localtime:/etc/localtime:ro -v /home/runner/work/chrispile/chrispile/in:/incoming:ro -v /home/runner/work/chrispile/chrispile/out:/outgoing:rw fnndsc/pl-simpledsapp:2.0.0 simpledsapp /incoming /outgoing'
+          cmd = 'exec podman run --rm -v /etc/localtime:/etc/localtime:ro -v /home/runner/work/chrispile/chrispile/in:/incoming:ro -v /home/runner/work/chrispile/chrispile/out:/outgoing:rw fnndsc/pl-simpledsapp:2.0.0 ls /incoming'
           run(['bash', '-xs', '-'], input=cmd, env=e, text=True, check=True)
       
       # - name: Real run
