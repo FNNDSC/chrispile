@@ -14,9 +14,8 @@ jobs:
         image: [ 'alpine', 'python:3.9.1-slim-buster' ]
         engine: [ 'podman', 'docker' ]
     steps:
-      - run: touch /tmp/bean
       - name: Pull
         run: ${{ matrix.engine }} pull ${{ matrix.image }}
 
       - run: ${{ matrix.engine }} run ${{ matrix.image }} ls /tmp
-      - run: ${{ matrix.engine }} run -v /tmp/bean:/wow:ro ${{ matrix.image }} ls /tmp
+      - run: ${{ matrix.engine }} run -v /tmp:/tmp ${{ matrix.image }} ls /tmp
