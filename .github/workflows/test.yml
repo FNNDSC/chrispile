@@ -40,4 +40,4 @@ jobs:
       - name: Test
         env:
           ENGINE_TO_TEST: ${{ matrix.container-engine }}
-        run: testenv/with_engine_mask.sh python -m unittest
+        run: test/with_engine_mask.sh python -m unittest
