@@ -2,12 +2,13 @@ import typing
 import abc
 import logging
 import json
+import sys
 from shutil import which
 from subprocess import check_output
 from argparse import ArgumentParser, Namespace
 
 from .util import CommandProvider
-from .config import ChrispileConfig, get_config
+from .config import ChrispileConfig
 
 logger = logging.getLogger(__name__)
 
@@ -20,6 +21,10 @@ class GuessingException(Exception):
 
 
 class Endpoint(abc.ABC):
+    """
+    An Endpoint represents something about the system. It has a name,
+    and can be represented as either a string value or some shell code.
+    """
     OPTION_NAME = 'option'
 
     def __init__(self, config: ChrispileConfig):
@@ -28,8 +33,8 @@ class Endpoint(abc.ABC):
         if not self.value:
             self.value = self.guess(config)
 
-    @staticmethod
-    def guess(self, config: ChrispileConfig) -> typing.Optional[str]:
+    @classmethod
+    def guess(cls, config: ChrispileConfig) -> typing.Optional[str]:
         """
         Figure out the value automatically.
         :raises GuessingException: can't detect from system
@@ -57,20 +62,22 @@ class EngineEndpoint(Endpoint):
     OPTION_NAME = 'engine'
     SUPPORTED_ENGINES = ['podman', 'docker']
 
-    def guess(self, config):
-        for engine_name in self.SUPPORTED_ENGINES:
+    @classmethod
+    def guess(cls, config):
+        for engine_name in cls.SUPPORTED_ENGINES:
             if which(engine_name):
                 return engine_name
         raise GuessingException(
             'No supported engines detected. '
-            'Options are: ' + str(self.SUPPORTED_ENGINES)
+            'Options are: ' + str(cls.SUPPORTED_ENGINES)
         )
 
 
 class SelinuxEndpoint(Endpoint):
     OPTION_NAME = 'selinux'
 
-    def guess(self, config):
+    @classmethod
+    def guess(cls, config):
         if not which('getenforce'):
             return 'na'
         return check_output(['getenforce'], encoding='utf-8').strip().lower()
@@ -79,53 +86,109 @@ class SelinuxEndpoint(Endpoint):
         if value != 'enforcing':
             return ''
         if not options:
-            return 1
+            return '1'
         if options[0] == 'mount_flag':
             return ',z'
         raise ValueError('unrecognized options: ' + str(options))
 
 
-class GpuEndpoint(Endpoint):
-    OPTION_NAME = 'nvidia'
-    SHELL_MAP = {
-        'nvidia-container-runtime': '--runtime=nvidia',
-        'native': '--gpus all'
-    }
+class GpuEndpoint(EngineEndpoint):
+    OPTION_NAME = 'gpu'
 
     def __init__(self, config: ChrispileConfig):
         super().__init__(config)
-        self.selinux = SelinuxEndpoint(config).as_shell()
 
-    def guess(self, config):
-        engine = str(EngineEndpoint(config))
-        if engine == 'podman':
-            logger.warning('GPU detection for podman not implemented')
-            return None
-        if engine == 'docker':
-            output = check_output([engine, 'info', '--format', '{{ (json .Runtimes) }}'], encoding='utf-8')
-            runtimes = json.loads(output)
-            if 'nvidia' in runtimes:
-                return 'nvidia-container-runtime'
-            elif which('nvidia-container-runtime-hook'):
-                return 'native'
-            else:
-                return None
+    @classmethod
+    def guess(cls, config):
+        if which('nvidia-container-toolkit'):
+            return 'nvidia-container-toolkit'
+        return None
 
     def _as_shell(self, value, options):
         if not value:
             return ''
-        result = self.SHELL_MAP[value]
-        if self.selinux == '1':
-            result += '--security-opt label=type:nvidia_container_t'
-        return result
+
+        flags = []
+        engine = str(EngineEndpoint(self.config))
+        selinux = SelinuxEndpoint(self.config).as_shell()
+        if selinux == '1':
+            flags.append('--security-opt')
+            flags.append('label=type:nvidia_container_t')
+
+        if engine == 'docker':
+            output = check_output([engine, 'info', '--format', '{{ (json .Runtimes) }}'], text=True)
+            runtimes = json.loads(output)
+            if 'nvidia' in runtimes:
+                flags.append('--runtime=nvidia')
+            else:
+                output = check_output([engine, 'run', '--help'], text=True)
+                if '--gpus' in output:
+                    flags.append('--gpus')
+                    which_gpus = options[0] if options else 'all'
+                    flags.append(which_gpus)
+                else:
+                    logger.warning(f'Unsure how to use GPU with {engine}')
+        return ' '.join(flags)
 
 
-class ChrispileApi(CommandProvider):
+class AbstractChrispileApi(abc.ABC):
+    ENDPOINT_CLASSES = [EngineEndpoint, GpuEndpoint, SelinuxEndpoint]
 
+    def __init__(self, config: ChrispileConfig = None):
+        if not config:
+            config = ChrispileConfig()
+
+        self.config = config
+
+    @staticmethod
+    @abc.abstractmethod
+    def endpoint2value(endpoint: Endpoint, args: list) -> str:
+        ...
+
+    def engine(self, args: list = None):
+        return self.endpoint2value(EngineEndpoint(self.config), args)
+
+    def gpu(self, args: list = None):
+        return self.endpoint2value(GpuEndpoint(self.config), args)
+
+    def selinux(self, args: list = None):
+        return self.endpoint2value(SelinuxEndpoint(self.config), args)
+
+    @classmethod
+    def get_class_names(cls):
+        return [ec.OPTION_NAME for ec in cls.ENDPOINT_CLASSES]
+
+
+class ShellBuilderApi(AbstractChrispileApi):
+    @staticmethod
+    def endpoint2value(endpoint: Endpoint, args: list) -> str:
+        return endpoint.as_shell(args)
+
+
+class InfoApi(AbstractChrispileApi):
+    @staticmethod
+    def endpoint2value(endpoint: Endpoint, args: list) -> str:
+        return str(endpoint)
+
+
+class SubShellApi(AbstractChrispileApi):
+    """
+    Produces shell subshell syntax for how to query chrispile api.
+    """
+    @staticmethod
+    def endpoint2value(endpoint: Endpoint, args: list) -> str:
+        extra_options = ''
+        if args:
+            extra_options = ' ' + ' '.join(args)
+        return f'$({sys.argv[0]} api {endpoint.OPTION_NAME}{extra_options})'
+
+
+class ChrispileApiCommand(CommandProvider):
+    # assign strings to methods of an AbstractChrispileApi
     ENDPOINT_MAP = {
-        'engine': EngineEndpoint,
-        'gpu': GpuEndpoint,
-        'selinux': SelinuxEndpoint
+        'engine': lambda e: e.engine,
+        'gpu': lambda e: e.gpu,
+        'selinux': lambda e: e.selinux
     }
 
     def __init__(self, parser: ArgumentParser):
@@ -143,19 +206,24 @@ class ChrispileApi(CommandProvider):
                                    help=f'format output as plain string (default)')
         endpoint_options = str(list(self.ENDPOINT_MAP.keys()))
         parser.add_argument('endpoint',
-                            nargs='+',
-                            help='key for information which to retrieve ' + endpoint_options)
+                            type=self.endpoint_name,
+                            help='key for information which to retrieve'
+                                 ' ' + endpoint_options)
+        parser.add_argument('subkeys',
+                            nargs='*',
+                            help='name of which field of information to '
+                                 'retrieve under given endpoint')
+
+    @classmethod
+    def endpoint_name(cls, endpoint_name):
+        endpoint_name = str(endpoint_name)
+        if endpoint_name not in cls.ENDPOINT_MAP:
+            raise ValueError(f'{endpoint_name} is not one of: {str(cls.ENDPOINT_MAP.keys())}')
+        return endpoint_name
 
     def __call__(self, options: Namespace):
-        endpoint = options.endpoint[0]
-        if endpoint not in self.ENDPOINT_MAP:
-            raise ValueError(f'{endpoint} is not one of: {str(self.ENDPOINT_MAP.keys())}')
-
-        endpoint_class = self.ENDPOINT_MAP[endpoint]
-        endpoint_instance = endpoint_class(self.config)
-
-        if options.as_flag:
-            result = endpoint_instance.as_shell(options.endpoint[1:])
-        else:
-            result = str(endpoint_instance)
+        api_class = ShellBuilderApi if options.as_flag else InfoApi
+        api_instance = api_class(self.config)
+        api_function = self.ENDPOINT_MAP[options.endpoint](api_instance)
+        result = api_function(options.subkeys)
         print(result)

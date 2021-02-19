@@ -1,7 +1,7 @@
 import argparse
 import sys
 from importlib.metadata import metadata
-from .api import ChrispileApi
+from .api import ChrispileApiCommand
 from .run import ChrispileRunner
 from .store import ChrispileInstaller, StoreLister, StoreRemover
 
@@ -25,7 +25,7 @@ run_parser = subparsers.add_parser('run',
 run = ChrispileRunner(run_parser)
 
 api_parser = subparsers.add_parser('api', help='query the system for information')
-api = ChrispileApi(api_parser)
+api = ChrispileApiCommand(api_parser)
 
 install_parser = subparsers.add_parser('install', help='install a ChRIS plugin as an executable')
 installer = ChrispileInstaller(install_parser)

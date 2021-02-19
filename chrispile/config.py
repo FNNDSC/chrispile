@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Union
+from typing import Optional
 from os import path, environ, getenv
 from yaml import safe_load
 
@@ -12,28 +12,29 @@ CONFIG_FILE = getenv('CHRISPILE_CONFIG_FILE', CONFIG_FILE)
 DEFAULT_CONFIG = {
     'bin_folder': '~/.local/bin',
     'engine': None,  # podman, docker
-    'nvidia': None,  # nvidia-container-toolkit, legacy
+    'gpu': None,  # nvidia-container-toolkit
     'selinux': None  # enforcing, permissive, disabled
 }
 
 
 class ChrispileConfig:
-    def __init__(self, custom_config: dict = None, default_config: Union[ChrispileConfig, dict] = None):
-        if custom_config is None:
-            custom_config = {}
-        if default_config is None:
-            default_config = DEFAULT_CONFIG
-        elif default_config.__class__ is ChrispileConfig:
-            default_config = default_config.__dict__
+    def __init__(self,
+                 bin_folder: Optional[str] = None,
+                 engine: Optional[str] = None,
+                 gpu: Optional[str] = None,
+                 selinux: Optional[str] = None,
+                 default: Optional[ChrispileConfig] = None):
 
-        merged_config = dict()
-        merged_config.update(default_config)
-        merged_config.update(custom_config)
+        self.bin_folder = bin_folder
+        self.engine = engine
+        self.gpu = gpu
+        self.selinux = selinux
 
-        self.engine = merged_config['engine']
-        self.nvidia = merged_config['nvidia']
-        self.selinux = merged_config['selinux']
-        self.bin_folder = merged_config['bin_folder']
+        default = default.__dict__ if default else DEFAULT_CONFIG
+
+        for field in self.__dict__:
+            if self.__dict__[field] is None and field in default:
+                self.__dict__[field] = default[field]
 
 
 def get_config() -> ChrispileConfig:
@@ -41,4 +42,4 @@ def get_config() -> ChrispileConfig:
     if path.exists(CONFIG_FILE):
         with open(CONFIG_FILE, 'r') as f:
             custom_config = safe_load(''.join(f.readlines()))
-    return ChrispileConfig(custom_config)
+    return ChrispileConfig(**custom_config)

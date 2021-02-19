@@ -18,7 +18,7 @@ class TestStore(unittest.TestCase):
         self.tempdir = TemporaryDirectory()
         self.dir = self.tempdir.name
         config = get_config()
-        self.config = ChrispileConfig({'bin_folder': self.dir}, config)
+        self.config = ChrispileConfig(bin_folder=self.dir, default=config)
 
         self.parser = argparse.ArgumentParser()
         self.subparsers = self.parser.add_subparsers()

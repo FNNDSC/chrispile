@@ -33,7 +33,7 @@ class TestRender(unittest.TestCase):
         self.assertNotIn('/incoming:ro,z', code)
         self.assertNotIn('/outgoing:rw,z', code)
 
-        selinux_config = ChrispileConfig({'selinux': 'enforcing'}, self.config)
+        selinux_config = ChrispileConfig(selinux='enforcing', default=self.config)
         compiler = Chrispiler(selinux_config)
         code = compiler.compile_plugin('fnndsc/pl-simpledsapp:2.0.0', linking='static')
         self.assertIn('/incoming:ro,z', code)
