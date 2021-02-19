@@ -100,6 +100,10 @@ def is_product(filename: str) -> bool:
     :return: true if file was created by chrispile
     """
     search_string = f'# CHRISPILE {CHRISPILE_UUID}'
+    if not path.isfile(filename):
+        return False
+    if path.getsize(filename) < len(search_string) + 1:
+        return False
     with open(filename, 'rb') as f:
         f.seek(-len(search_string), os.SEEK_END)
         last_line = f.read(len(search_string))
@@ -129,4 +133,8 @@ class StoreRemover(CommandProvider):
 
     def __call__(self, options: Namespace):
         bin_folder = path.expanduser(self.config.bin_folder)
-        os.unlink(path.join(bin_folder, options.name))
+        file_path = path.join(bin_folder, options.name)
+        if not is_product(file_path):
+            logger.error(f'Not recognized as chrispiled plugin: ' + file_path)
+            sys.exit(1)
+        os.unlink(file_path)

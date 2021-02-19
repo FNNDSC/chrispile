@@ -61,6 +61,15 @@ class TestStore(unittest.TestCase):
         self.simulate('uninstall', name)
         self.assertFalse(path.exists(target))
 
+    def test_should_not_uninstall_external_files(self):
+        # just to get a random name
+        with NamedTemporaryFile(dir=self.dir, delete=False) as tmp:
+            pass
+        filename = path.basename(tmp.name)
+        with self.assertRaises(SystemExit):
+            self.simulate('uninstall', filename)
+        self.assertTrue(path.exists(tmp.name))
+
 
 if __name__ == '__main__':
     unittest.main()
