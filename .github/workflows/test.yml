@@ -14,8 +14,8 @@ jobs:
         image: [ 'alpine', 'debian' ]
         engine: [ 'podman', 'docker' ]
     steps:
+      - run: ln -s /etc/passwd /tmp/beans
       - name: Pull
         run: ${{ matrix.engine }} pull ${{ matrix.image }}
-      - run: stat /etc/localtime
       - run: ${{ matrix.engine }} run ${{ matrix.image }} ls /tmp
-      - run: ${{ matrix.engine }} run -v /etc/localtime:/etc/localtime:ro ${{ matrix.image }} ls /tmp
+      - run: ${{ matrix.engine }} run -v /tmp/beans:/wow:ro ${{ matrix.image }} ls /tmp
