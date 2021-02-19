@@ -7,16 +7,16 @@ on:
     branches: [ master ]
 
 jobs:
-  test-podman:
+  test:
     runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
       matrix:
-        file: [ '/tmp/no-sudo', '/tmp/yes-sudo' ]
+        file: [ '/tmp/no-sudo', '/tmp/yes-sudo', '/etc/localtime' ]
         image: [ 'alpine', 'debian' ]
         engine: [ 'podman', 'docker' ]
     steps:
-      - run: touch /tmp/beans
+      - run: sudo touch /tmp/beans
       - run: ln -s /tmp/beans /tmp/no-sudo && sudo ln -s /tmp/beans /tmp/yes-sudo
       - run: ${{ matrix.engine }} --version
       - run: ${{ matrix.engine }} pull ${{ matrix.image }}
