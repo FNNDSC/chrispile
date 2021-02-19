@@ -11,11 +11,11 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        image: [ 'alpine', 'python:3.9.1-slim-buster' ]
+        image: [ 'alpine', 'debian' ]
         engine: [ 'podman', 'docker' ]
     steps:
       - name: Pull
         run: ${{ matrix.engine }} pull ${{ matrix.image }}
 
       - run: ${{ matrix.engine }} run ${{ matrix.image }} ls /tmp
-      - run: ${{ matrix.engine }} run -v /tmp:/tmp ${{ matrix.image }} ls /tmp
+      - run: ${{ matrix.engine }} run -v /etc/localtime:/something:ro ${{ matrix.image }} ls /tmp
