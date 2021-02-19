@@ -15,12 +15,8 @@ jobs:
         engine: [ 'podman', 'docker' ]
     steps:
       # - uses: actions/checkout@v2
-      - name: Install
-        run: |
-          ${{ matrix.engine }} pull ${{ matrix.image }}
-          mkdir /tmp/folder
-          touch /tmp/folder/bean
+      - name: Pull
+        run: ${{ matrix.engine }} pull ${{ matrix.image }}
+
       - run: ${{ matrix.engine }} run ${{ matrix.image }} ls /tmp
       - run: ${{ matrix.engine }} run -v /etc/localtime:/etc/localtime:ro ${{ matrix.image }} ls /tmp
-      - run: ${{ matrix.engine }} run -v /tmp/folder:/wack:ro ${{ matrix.image }} ls /tmp
-      - run: ${{ matrix.engine }} run -v /etc/localtime:/etc/localtime:ro -v /tmp/folder:/wack:ro ${{ matrix.image }} ls /tmp
