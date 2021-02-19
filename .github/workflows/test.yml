@@ -10,14 +10,15 @@ jobs:
   test-podman:
     runs-on: ubuntu-20.04
     strategy:
+      fail-fast: false
       matrix:
+        file: [ '/tmp/no-sudo', '/tmp/yes-sudo' ]
         image: [ 'alpine', 'debian' ]
         engine: [ 'podman', 'docker' ]
-        mount: [ '/tmp/beans', '/etc/localtime' ]
     steps:
-      - run: ln -s /etc/passwd /tmp/beans
+      - run: touch /tmp/beans
+      - run: ln -s /tmp/beans /tmp/no-sudo && sudo ln -s /tmp/beans /tmp/yes-sudo
       - run: ${{ matrix.engine }} --version
-      - name: Pull
-        run: ${{ matrix.engine }} pull ${{ matrix.image }}
+      - run: ${{ matrix.engine }} pull ${{ matrix.image }}
       - run: ${{ matrix.engine }} run ${{ matrix.image }} ls /tmp
-      - run: ${{ matrix.engine }} run -v ${{ matrix.mount }}:/wow:ro ${{ matrix.image }} ls /tmp
+      - run: ${{ matrix.engine }} run -v ${{ matrix.file }}:/wow:ro ${{ matrix.image }} ls /tmp
