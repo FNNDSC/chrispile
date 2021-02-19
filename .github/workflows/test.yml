@@ -17,7 +17,9 @@ jobs:
           podman pull python:3.9.1-slim-buster
           mkdir /tmp/folder
           touch /tmp/folder/bean
-
       - name: Test
-        run: podman run --rm -v /etc/localtime:/etc/localtime:ro -v /tmp/folder:/wack:ro python:3.9.1-slim-buster ls /wack
+        run: podman run python:3.9.1-slim-buster ls /tmp
+      
+      - name: Test
+        run: podman run -v /etc/localtime:/etc/localtime:ro -v /tmp/folder:/wack:ro python:3.9.1-slim-buster ls /tmp
       
