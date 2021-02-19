@@ -150,6 +150,7 @@ class Chrispiler:
         api = ShellBuilderApi(self.config)
         engine = api.engine()
         info = PythonImageInfo(engine)
+        # TODO might be useful to get plugin meta dynamically
         meta = info.get_plugin_meta(dock_image)
 
         return self.template.render(
