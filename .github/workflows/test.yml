@@ -14,11 +14,12 @@ jobs:
       # - uses: actions/checkout@v2
       - name: Install
         run: |
+          podman pull python:3.9.1-slim-buster
           mkdir in out
           touch in/a
 
       - name: wo script
-        run: podman run --rm -v /etc/localtime:/etc/localtime:ro -v /home/runner/work/chrispile/chrispile/in:/incoming:ro alpine ls /incoming
+        run: podman run --rm -v /etc/localtime:/etc/localtime:ro -v /home/runner/work/chrispile/chrispile/in:/incoming:ro python:3.9.1-slim-buster ls /incoming
       
       # - name: Real run
       #   env:
