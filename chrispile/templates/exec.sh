@@ -2,17 +2,21 @@
 # {{ selfexec }} {{ meta['type'] }} ChRIS plugin app
 # Chrispile-generated wrapper script
 #
-# usage: {{ selfexec }} [--options ...] {{ './in/' if meta['type'] == FS }} ./out/
+# usage: {{ selfexec }} [--options ...] {{ './in/' if meta['type'] != 'fs' }} ./out/
+{% if linking == 'dynamic' -%}
+{% set executor = 'run' -%}
+{% set api = SubShellApi -%}
+{% else -%}
+{% set executor = 'exec' %}
+{% set api = ShellBuilderApi -%}
+{% endif -%}
+{% set engine = api.engine() -%}
+{% set gpus = api.gpu() -%}
+{% set selinux_mount_flag = api.selinux('mount_flag') -%}
 {% if linking == 'dynamic' -%}
 # Environment variables:
 #   CHRISPILE_DRY_RUN           if defined, print command and exit
-{% set executor = 'run' -%}
-{% macro chrispile_api(key) -%}
-$({{ chrispile  }} api --as-flag {{ key }})
-{%- endmacro -%}
-{% set engine = chrispile_api('engine') -%}
-{% set gpus = chrispile_api('gpu') -%}
-{% set selinux_mount_flag = chrispile_api('selinux mount_flag') -%}
+{% set resource_dir = info.find_resource_dir(dock_image, meta) -%}
 {% if resource_dir.startswith('/') -%}
 #   CHRISPILE_HOST_SOURCE_DIR   if non-empty, mount it into the container
 
@@ -74,6 +78,8 @@ fi
 
 num_directories={{ 1 if meta['type'] == 'fs' else 2 }}
 
+# user did not give enough options to successfully run the program,
+# assume they are trying to run --version, --json, or --meta
 if [ "$#" -lt "$num_directories" ]; then
   num_directories=0
 fi

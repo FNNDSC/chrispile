@@ -1,8 +1,8 @@
 import typing
+from collections.abc import Iterable
 import abc
 import logging
 import json
-import sys
 from shutil import which
 from subprocess import check_output
 from argparse import ArgumentParser, Namespace
@@ -42,10 +42,10 @@ class Endpoint(abc.ABC):
         """
         return None
 
-    def _as_shell(self, value: str, options: list) -> str:
+    def _as_shell(self, value: str, options: typing.Iterable) -> str:
         return value
 
-    def as_shell(self, options: typing.Optional[list] = None) -> str:
+    def as_shell(self, options: typing.Optional[Iterable] = None) -> str:
         """
         Produce a representation of this value which can be passed to docker/podman
         :return: option for docker/podman
@@ -140,18 +140,18 @@ class AbstractChrispileApi(abc.ABC):
 
         self.config = config
 
-    @staticmethod
+    @classmethod
     @abc.abstractmethod
-    def endpoint2value(endpoint: Endpoint, args: list) -> str:
+    def endpoint2value(cls, endpoint: Endpoint, args: Iterable) -> str:
         ...
 
-    def engine(self, args: list = None):
+    def engine(self, *args):
         return self.endpoint2value(EngineEndpoint(self.config), args)
 
-    def gpu(self, args: list = None):
+    def gpu(self, *args):
         return self.endpoint2value(GpuEndpoint(self.config), args)
 
-    def selinux(self, args: list = None):
+    def selinux(self, *args):
         return self.endpoint2value(SelinuxEndpoint(self.config), args)
 
     @classmethod
@@ -161,26 +161,14 @@ class AbstractChrispileApi(abc.ABC):
 
 class ShellBuilderApi(AbstractChrispileApi):
     @staticmethod
-    def endpoint2value(endpoint: Endpoint, args: list) -> str:
+    def endpoint2value(endpoint: Endpoint, args: Iterable) -> str:
         return endpoint.as_shell(args)
 
 
 class InfoApi(AbstractChrispileApi):
     @staticmethod
-    def endpoint2value(endpoint: Endpoint, args: list) -> str:
+    def endpoint2value(endpoint: Endpoint, args: Iterable) -> str:
         return str(endpoint)
-
-
-class SubShellApi(AbstractChrispileApi):
-    """
-    Produces shell subshell syntax for how to query chrispile api.
-    """
-    @staticmethod
-    def endpoint2value(endpoint: Endpoint, args: list) -> str:
-        extra_options = ''
-        if args:
-            extra_options = ' ' + ' '.join(args)
-        return f'$({sys.argv[0]} api {endpoint.OPTION_NAME}{extra_options})'
 
 
 class ChrispileApiCommand(CommandProvider):
@@ -225,5 +213,5 @@ class ChrispileApiCommand(CommandProvider):
         api_class = ShellBuilderApi if options.as_flag else InfoApi
         api_instance = api_class(self.config)
         api_function = self.ENDPOINT_MAP[options.endpoint](api_instance)
-        result = api_function(options.subkeys)
+        result = api_function(*options.subkeys)
         print(result)

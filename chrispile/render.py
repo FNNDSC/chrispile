@@ -5,7 +5,7 @@ from subprocess import check_output, run, CalledProcessError
 from pkg_resources import parse_version
 from importlib.metadata import Distribution
 from jinja2 import Environment, PackageLoader
-from .api import GpuEndpoint, EngineEndpoint, SelinuxEndpoint
+from .api import ShellBuilderApi, AbstractChrispileApi, Endpoint
 from .config import ChrispileConfig, CHRISPILE_UUID
 
 
@@ -101,6 +101,19 @@ class PythonImageInfo:
             return ''
 
 
+class SubShellApi(AbstractChrispileApi):
+    """
+    Produces shell subshell syntax for how to query chrispile api.
+    """
+    @classmethod
+    def endpoint2value(cls, endpoint: Endpoint, args: list) -> str:
+        extra_options = ''
+        if args:
+            extra_options = ' ' + ' '.join(args)
+        # btw hard-coded program and subcommand name
+        return f'$(chrispile api --as-flag {endpoint.OPTION_NAME}{extra_options})'
+
+
 # noinspection SpellCheckingInspection
 class Chrispiler:
     def __init__(self, config: ChrispileConfig):
@@ -131,23 +144,24 @@ class Chrispiler:
         :raises PluginMetaLookupError: docker image probably not pulled
         :return: code for a shell script
         """
-        engine = EngineEndpoint(self.config).as_shell()
-        info = PythonImageInfo(engine)
+        if linking not in ['static', 'dynamic']:
+            raise ValueError('linking must be either "static" or "dynamic"')
 
+        api = ShellBuilderApi(self.config)
+        engine = api.engine()
+        info = PythonImageInfo(engine)
         meta = info.get_plugin_meta(dock_image)
-        resource_dir = info.find_resource_dir(dock_image, meta) if linking == 'dynamic' else ''
 
         return self.template.render(
             linking=linking,
+            info=info,
+            ShellBuilderApi=api,
+            SubShellApi=SubShellApi(self.config),
             meta=meta,
             dock_image=dock_image,
             selfexec=meta['selfexec'],
-            resource_dir=resource_dir,
             chrispile=self.program_name,
             chrispile_uuid=CHRISPILE_UUID,
-            engine=engine,
-            selinux_mount_flag=SelinuxEndpoint(self.config).as_shell(['mount_flag']),
-            gpus=GpuEndpoint(self.config).as_shell()
         )
 
     def test_the_waters(self, dock_image: str):
@@ -156,7 +170,7 @@ class Chrispiler:
         :param dock_image: container image tag of a ChRIS plugin
         :return: command inside image to run
         """
-        engine = EngineEndpoint(self.config).as_shell()
+        engine = ShellBuilderApi(self.config).engine()
 
         try:
             return PythonImageInfo(engine).get_plugin_cmd(dock_image)
