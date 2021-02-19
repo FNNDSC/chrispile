@@ -8,6 +8,7 @@ on:
 
 jobs:
   test-python:
+    if: false
     name: Test across python versions
     runs-on: ubuntu-latest
     strategy:
@@ -37,7 +38,9 @@ jobs:
           pip install -r requirements.txt
           pip install .
           echo "$HOME/.local/bin" >> $GITHUB_PATH
+      - run: ${{ matrix.container-engine }} pull fnndsc/pl-simpledsapp:2.0.0 && mkdir in out
+      - run: chrispile run --dry-run -- fnndsc/pl-simpledsapp:2.0.0 --dummyFloat 3.2 in out
       - name: Test
         env:
           ENGINE_TO_TEST: ${{ matrix.container-engine }}
-        run: test/with_engine_mask.sh python -m unittest
+        run: test/with_engine_mask.sh chrispile run --dry-run -- fnndsc/pl-simpledsapp:2.0.0 --dummyFloat 3.2 in out
