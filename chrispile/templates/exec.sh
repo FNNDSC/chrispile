@@ -47,9 +47,9 @@ fi
 
 function run () {
   if [ -v CHRISPILE_DRY_RUN ]; then
-    echo $@
+    echo "$@"
   else
-    exec $@
+    exec "$@"
   fi
 }
 
@@ -78,11 +78,10 @@ if [ -f /etc/localtime ]; then
   timezone="-v /etc/localtime:/etc/localtime:ro{{ selinux_mount_flag }}"
 fi
 
-{{ executor }} {{ engine }} run  \
-    --rm $user_setting \
-    {{ gpus }}  \
-    $timezone ${shared_volumes[@]} $resource_injection  \
+{{ executor }} {{ engine }} run               \
+    --rm {{ gpus }} $user_setting $timezone   \
+    ${shared_volumes[@]} $resource_injection  \
     {{ dock_image }} {{ selfexec }}  \
-    ${cli_args[@]} $@
+    "${cli_args[@]}" "$@"
 
 # CHRISPILE {{ chrispile_uuid }}
