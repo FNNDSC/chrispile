@@ -1,7 +1,7 @@
 import sys
 import json
 from os import path
-from subprocess import check_output, run, CalledProcessError
+from subprocess import check_output, run, CalledProcessError, STDOUT
 from pkg_resources import parse_version
 from importlib.metadata import Distribution
 from jinja2 import Environment, PackageLoader
@@ -10,6 +10,10 @@ from .config import ChrispileConfig, CHRISPILE_UUID
 
 
 class PluginMetaLookupError(Exception):
+    pass
+
+
+class PythonVersionLookupError(Exception):
     pass
 
 
@@ -42,17 +46,37 @@ class PythonImageInfo:
         except json.JSONDecoder:
             raise PluginMetaLookupError(f"Command '{' '.join(cmd)}' produced invalid JSON")
 
-    def interrogate_python_package_location(self, dock_image: str, meta: dict) -> str:
-        python_version_string = check_output(
+    def get_python_version(self, dock_image: str) -> str:
+        """
+        Run python --version inside of a docker image and get its semantic version number.
+        :param dock_image: docker image tag
+        :return: semantic version number
+        """
+        # version string typically looks like: "Python 3.9.2"
+        # But other variations exist such as: "Python 3.6.9 :: Anaconda, Inc."
+        # and for whatever reason, the conda version prints to stderr instead...
+        python_version_string: str = check_output(
             [
                 self.engine, 'run', '--rm', '-w', '/',
                 '--entrypoint', 'python',
                 dock_image,
                 '--version'
             ],
-            text=True
+            text=True,
+            stderr=STDOUT
         )
-        python_version_number = python_version_string.split()[-1]
+        for line in python_version_string.split('\n'):
+            words = line.split()
+            if not words:
+                continue
+            if words[0] == 'Python':
+                if len(words) < 2 or not words[1][0].isdigit():
+                    raise PythonVersionLookupError(f'Expected "Python x.y.z", got "{line}"')
+                return words[1]
+        raise PythonVersionLookupError(f'Version string not found in:\n{python_version_string}')
+
+    def interrogate_python_package_location(self, dock_image: str, meta: dict) -> str:
+        python_version_number = self.get_python_version(dock_image)
         if parse_version(python_version_number) >= parse_version('3.7'):
             # this part is inconsistent across versions
             # New behavior in python3.9: importlib.resources.path(package, '') raises IsADirectoryError
