@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # {{ selfexec }} {{ meta['type'] }} ChRIS plugin app
 # Chrispile-generated wrapper script
 #
@@ -82,6 +82,6 @@ fi
     --rm {{ gpus }} $user_setting $timezone   \
     ${shared_volumes[@]} $resource_injection  \
     {{ dock_image }} {{ selfexec }}  \
-    "${cli_args[@]}" "$@"
+    "${cli_args[@]}"
 
 # CHRISPILE {{ chrispile_uuid }}

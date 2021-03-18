@@ -13,8 +13,33 @@ fi
 
 # organize arguments into two arrays: one of cli_args, one of
 # incoming/outgoing directories
-for i in $(seq $(($#-$num_directories))); do
-  cli_args[$i]=$1
+
+{%- raw %}
+function append_args () {
+  until [ "$#" = "0" ]; do
+    cli_args[${#cli_args[@]}]="$1"
+    shift
+  done
+}
+
+# simple polyfill for seq which outputs nothing for input less than 1
+#
+# BSD seq behaves oddly with 0 or negative numbers
+# $ seq 0
+# 1
+# 0
+# wtf is that?
+function seq () {
+  if [ "$1" -lt "1" ]; then
+    return
+  fi
+  command seq $1
+}
+{% endraw %}
+
+num_cli_args=$(($# - $num_directories))
+for i in $(seq $num_cli_args); do
+  append_args $1
   shift
 done
 
@@ -23,13 +48,17 @@ for i in $(seq $num_directories); do
   shift
 done
 
-# describe mount points
-set -- /incoming:ro{{ selinux_mount_flag }} /outgoing:rw{{ selinux_mount_flag }}
 
-# for FS plugin, there is no /incoming
-until [ "$#" = "$num_directories" ]; do
-  shift
-done
+# describe mount points
+case $num_directories in
+  # we have a dummy string '/nil' so that the array is one-indexed
+  # makes it easier to use seq and for loops
+  0) mount_points=( /nil ) ;;
+  1) mount_points=( /nil /outgoing:rw{{ selinux_mount_flag }} )
+     append_args /outgoing ;;
+  2) mount_points=( /nil /incoming:ro{{ selinux_mount_flag }} /outgoing:rw{{ selinux_mount_flag }} )
+     append_args /incoming /outgoing ;;
+esac
 
 # resolve mount points for host folders into container
 for i in $(seq $num_directories); do
@@ -38,12 +67,5 @@ for i in $(seq $num_directories); do
     echo "'$real_dir': No such directory"
     exit 1
   fi
-  shared_volumes[$i]="-v $real_dir:$1"
-  shift
-done
-
-set -- /incoming /outgoing
-
-until [ "$#" = "$num_directories" ]; do
-  shift
+  shared_volumes[$i]="-v $real_dir:${mount_points[$i]}"
 done

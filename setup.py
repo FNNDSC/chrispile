@@ -6,7 +6,7 @@ with open(path.join(path.dirname(path.abspath(__file__)), 'README.md')) as f:
 
 setup(
     name='chrispile',
-    version='1.2.3',
+    version='1.2.4',
     packages=['chrispile'],
     url='https://github.com/FNNDSC/chrispile',
     license='MIT',
