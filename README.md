@@ -6,6 +6,16 @@
 
 Syntactical sugar for running ChRIS plugins locally.
 
+## Singularity
+
+TIP: Have you heard of [Singularity](https://en.wikipedia.org/wiki/Singularity_(software))?
+
+It handles all the issues with Docker described below, and more.
+You should prefer to use _Singularity_ instead of `chrispile` (unless, for whatever reason, you must use `docker`).
+_Singularity_ was made specifically for scientific compute and it is widely used in the commmunity.
+On the other hand, `docker` is more biased to backend software engineering and dev-ops.
+
+
 ## Abstract
 
 `chrispile` generates wrapper scripts around `docker run` (or `podman run`).
