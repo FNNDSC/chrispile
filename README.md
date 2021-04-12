@@ -15,6 +15,10 @@ You should prefer to use _Singularity_ instead of `chrispile` (unless, for whate
 _Singularity_ was made specifically for scientific compute and it is widely used in the commmunity.
 On the other hand, `docker` is more biased to backend software engineering and dev-ops.
 
+...
+
+As it turns out, this problem has been solved already time and time again.
+[CWL uses docker in a similar way as chrispile](https://www.commonwl.org/user_guide/07-containers/index.html)
 
 ## Abstract
 
