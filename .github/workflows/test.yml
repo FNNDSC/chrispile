@@ -7,37 +7,18 @@ on:
     branches: [ master ]
 
 jobs:
-  test-python:
-    name: Test across python versions
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: [ '3.8', '3.9' ]
-    steps:
-      - uses: actions/checkout@v2
-      - name: Setup Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{ matrix.python-version }}
-      - name: Install
-        run: |
-          pip install -r requirements.txt
-          pip install .
-      - run: python -m unittest
-  test-engine:
-    name: Test across container engines
+  test:
     runs-on: ubuntu-20.04
     strategy:
+      fail-fast: false
       matrix:
-        container-engine: [ 'docker', 'podman' ]
+        file: [ '/tmp/no-sudo', '/tmp/yes-sudo', '/etc/localtime' ]
+        image: [ 'alpine', 'debian' ]
+        engine: [ 'podman', 'docker' ]
     steps:
-      - uses: actions/checkout@v2
-      - name: Install
-        run: |
-          pip install -r requirements.txt
-          pip install .
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
-      - name: Test
-        env:
-          ENGINE_TO_TEST: ${{ matrix.container-engine }}
-        run: test/with_engine_mask.sh python -m unittest
+      - run: sudo touch /tmp/beans
+      - run: ln -s /tmp/beans /tmp/no-sudo && sudo ln -s /tmp/beans /tmp/yes-sudo
+      - run: ${{ matrix.engine }} --version
+      - run: ${{ matrix.engine }} pull ${{ matrix.image }}
+      - run: ${{ matrix.engine }} run ${{ matrix.image }} ls /tmp
+      - run: ${{ matrix.engine }} run -v ${{ matrix.file }}:/wow:ro ${{ matrix.image }} ls /tmp
